@@ -211,11 +211,22 @@ def _show_info_screen(screen: "curses.window", title: str, lines: list[str]) -> 
 
 
 def _show_defeat_screen(screen: "curses.window", game: Game) -> None:
-    _show_info_screen(
-        screen,
+    screen.nodelay(False)
+    screen.erase()
+    height, width = screen.getmaxyx()
+    lines = [
         "GAME OVER",
-        ["The dungeon has claimed you.", f"Time: {game.formatted_time()}", f"HP: {game.player.hp}/{game.player.max_hp}"],
-    )
+        "The dungeon has claimed you.",
+        f"Time: {game.formatted_time()}",
+        f"HP: {game.player.hp}/{game.player.max_hp}",
+        "Press any key to return home",
+    ]
+    top = max(0, (height - len(lines)) // 2)
+    for offset, line in enumerate(lines):
+        left = max(0, (width - len(line)) // 2)
+        screen.addstr(top + offset, left, line[: max(0, width - left)])
+    screen.refresh()
+    screen.getch()
 
 
 def run_curses(screen: "curses.window") -> None:
