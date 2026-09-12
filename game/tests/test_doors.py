@@ -23,11 +23,15 @@ class DoorTests(unittest.TestCase):
         dx, dy = DELTA[door.direction]
         neighbour = (door.tile_x + dx, door.tile_y + dy)
 
-        self.assertIn(door.direction, game.world.connections[(door.tile_x, door.tile_y)])
+        self.assertIn(
+            door.direction, game.world.connections[(door.tile_x, door.tile_y)]
+        )
         self.assertIn(OPPOSITE[door.direction], game.world.connections[neighbour])
         glyph = "-" if door.direction in ("N", "S") else "|"
         self.assertIn(glyph, game.render())
-        self.assertGreaterEqual(game.render().count(glyph), len(OPENING_CELLS[door.direction]))
+        self.assertGreaterEqual(
+            game.render().count(glyph), len(OPENING_CELLS[door.direction])
+        )
 
     def test_locked_door_does_not_seal_the_key_route(self):
         game = self._game_with_discovered_area()

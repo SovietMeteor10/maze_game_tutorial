@@ -23,7 +23,9 @@ def _direction_between(start: tuple[int, int], end: tuple[int, int]) -> str:
     return next(direction for direction, value in DELTA.items() if value == delta)
 
 
-def generate_tiles(width: int, height: int, seed: int = 7) -> dict[tuple[int, int], Tile]:
+def generate_tiles(
+    width: int, height: int, seed: int = 7
+) -> dict[tuple[int, int], Tile]:
     """Generate a finite graph for tests and examples using shared tile rules."""
     rng = random.Random(seed)
     positions = [(x, y) for y in range(height) for x in range(width)]
@@ -62,7 +64,11 @@ def generate_tiles(width: int, height: int, seed: int = 7) -> dict[tuple[int, in
             neighbour = (x + dx, y + dy)
             if neighbour not in connections:
                 continue
-            if len(connections[(x, y)]) <= 2 and len(connections[neighbour]) <= 2 and rng.random() < 0.12:
+            if (
+                len(connections[(x, y)]) <= 2
+                and len(connections[neighbour]) <= 2
+                and rng.random() < 0.12
+            ):
                 connections[(x, y)].add(direction)
                 connections[neighbour].add(OPPOSITE[direction])
 
@@ -125,13 +131,17 @@ def _choose_uniform_tile(
     return kind, rng.choice(candidates[kind])
 
 
-def validate_connections(tiles: dict[tuple[int, int], Tile], width: int, height: int) -> None:
+def validate_connections(
+    tiles: dict[tuple[int, int], Tile], width: int, height: int
+) -> None:
     """Assert that every generated neighbouring tile agrees on its edge."""
     for (x, y), tile in tiles.items():
         for direction, (dx, dy) in DELTA.items():
             neighbour = (x + dx, y + dy)
             if neighbour in tiles:
-                assert tile.is_open(direction) == tiles[neighbour].is_open(OPPOSITE[direction])
+                assert tile.is_open(direction) == tiles[neighbour].is_open(
+                    OPPOSITE[direction]
+                )
 
 
 @dataclass
@@ -158,7 +168,9 @@ class WorldMap:
     def in_bounds(self, tile_x: int, tile_y: int) -> bool:
         return (tile_x, tile_y) in self.connections
 
-    def ensure_tile(self, position: tuple[int, int], required_opening: str | None = None) -> Tile:
+    def ensure_tile(
+        self, position: tuple[int, int], required_opening: str | None = None
+    ) -> Tile:
         """Create a tile and its opening mask from graph constraints."""
         if position in self.tiles:
             return self.tiles[position]
@@ -179,7 +191,9 @@ class WorldMap:
 
         if required_opening is not None:
             if required_opening in blocked:
-                raise ValueError("A required graph opening conflicts with a known closed edge")
+                raise ValueError(
+                    "A required graph opening conflicts with a known closed edge"
+                )
             openings.add(required_opening)
 
         available = set(DIRECTIONS) - openings - blocked
@@ -265,12 +279,17 @@ class WorldMap:
         self.connections[target].add(OPPOSITE[direction])
         for position in (source, target):
             tile = self.tiles[position]
-            self.tiles[position] = Tile(tile.kind, frozenset(self.connections[position]))
+            self.tiles[position] = Tile(
+                tile.kind, frozenset(self.connections[position])
+            )
 
     def can_cross(self, tile_x: int, tile_y: int, direction: str) -> bool:
         """Create and validate a graph edge in one direction."""
         position = (tile_x, tile_y)
-        if position not in self.connections or direction not in self.connections[position]:
+        if (
+            position not in self.connections
+            or direction not in self.connections[position]
+        ):
             return False
         dx, dy = DELTA[direction]
         neighbour = (tile_x + dx, tile_y + dy)
@@ -292,11 +311,7 @@ class WorldMap:
         """Create a fully connected rectangular region of room tiles."""
         left = center[0] - width // 2
         top = center[1] - height // 2
-        positions = {
-            (left + x, top + y)
-            for y in range(height)
-            for x in range(width)
-        }
+        positions = {(left + x, top + y) for y in range(height) for x in range(width)}
         for position in positions:
             openings = {
                 direction
@@ -315,7 +330,10 @@ class WorldMap:
             for direction in openings:
                 dx, dy = DELTA[direction]
                 neighbour = (position[0] + dx, position[1] + dy)
-                if neighbour in self.connections and OPPOSITE[direction] in self.connections[neighbour]:
+                if (
+                    neighbour in self.connections
+                    and OPPOSITE[direction] in self.connections[neighbour]
+                ):
                     graph[position].add(neighbour)
         return graph
 
@@ -358,25 +376,34 @@ class WorldMap:
         player_x, player_y = player_tile
         camera_x, camera_y = viewport_tile or player_tile
         half_size = VIEWPORT_SIZE // 2
-        tile_rows = [["~"] * (VIEWPORT_SIZE * TILE_WIDTH) for _ in range(VIEWPORT_SIZE * TILE_HEIGHT)]
+        tile_rows = [
+            ["~"] * (VIEWPORT_SIZE * TILE_WIDTH)
+            for _ in range(VIEWPORT_SIZE * TILE_HEIGHT)
+        ]
 
-        for viewport_y, world_y in enumerate(range(camera_y - half_size, camera_y + half_size + 1)):
-            for viewport_x, world_x in enumerate(range(camera_x - half_size, camera_x + half_size + 1)):
+        for viewport_y, world_y in enumerate(
+            range(camera_y - half_size, camera_y + half_size + 1)
+        ):
+            for viewport_x, world_x in enumerate(
+                range(camera_x - half_size, camera_x + half_size + 1)
+            ):
                 position = (world_x, world_y)
                 if position not in self.discovered:
                     continue
                 rendered = self.render_region_tile(position, special_regions or ())
                 for local_y, row in enumerate(rendered):
                     start = viewport_x * TILE_WIDTH
-                    tile_rows[viewport_y * TILE_HEIGHT + local_y][start:start + TILE_WIDTH] = row
+                    tile_rows[viewport_y * TILE_HEIGHT + local_y][
+                        start : start + TILE_WIDTH
+                    ] = row
 
-        centre_start_x = half_size * TILE_WIDTH
-        centre_start_y = half_size * TILE_HEIGHT
         if exit_local is not None and exit_tile is not None:
             exit_x, exit_y = exit_local
             exit_view_x = (exit_tile[0] - camera_x + half_size) * TILE_WIDTH + exit_x
             exit_view_y = (exit_tile[1] - camera_y + half_size) * TILE_HEIGHT + exit_y
-            if 0 <= exit_view_y < len(tile_rows) and 0 <= exit_view_x < len(tile_rows[0]):
+            if 0 <= exit_view_y < len(tile_rows) and 0 <= exit_view_x < len(
+                tile_rows[0]
+            ):
                 tile_rows[exit_view_y][exit_view_x] = "E"
         for door in (doors or {}).values():
             if not door.locked:
@@ -393,13 +420,15 @@ class WorldMap:
             ):
                 viewport_x = tile_position[0] - camera_x + half_size
                 viewport_y = tile_position[1] - camera_y + half_size
-                if not (0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE):
+                if not (
+                    0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE
+                ):
                     continue
                 glyph = "-" if direction in ("N", "S") else "|"
                 for local_x, local_y in OPENING_CELLS[direction]:
-                    tile_rows[
-                        viewport_y * TILE_HEIGHT + local_y
-                    ][viewport_x * TILE_WIDTH + local_x] = glyph
+                    tile_rows[viewport_y * TILE_HEIGHT + local_y][
+                        viewport_x * TILE_WIDTH + local_x
+                    ] = glyph
         for wall in (secret_walls or {}).values():
             if wall.found:
                 continue
@@ -412,16 +441,20 @@ class WorldMap:
             ):
                 viewport_x = tile_position[0] - camera_x + half_size
                 viewport_y = tile_position[1] - camera_y + half_size
-                if not (0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE):
+                if not (
+                    0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE
+                ):
                     continue
                 for local_x, local_y in OPENING_CELLS[direction]:
-                    tile_rows[
-                        viewport_y * TILE_HEIGHT + local_y
-                    ][viewport_x * TILE_WIDTH + local_x] = "#"
+                    tile_rows[viewport_y * TILE_HEIGHT + local_y][
+                        viewport_x * TILE_WIDTH + local_x
+                    ] = "#"
         for explosion in explosions or ():
             viewport_x = explosion.tile_x - camera_x + half_size
             viewport_y = explosion.tile_y - camera_y + half_size
-            if not (0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE):
+            if not (
+                0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE
+            ):
                 continue
             if explosion.holy:
                 horizontal_start = viewport_y * TILE_HEIGHT + explosion.y - 1
@@ -442,30 +475,34 @@ class WorldMap:
                         and 0 <= local_x < TILE_WIDTH
                         and tile[local_y][local_x] != "#"
                     ):
-                        tile_rows[
-                            viewport_y * TILE_HEIGHT + local_y
-                        ][viewport_x * TILE_WIDTH + local_x] = "%"
+                        tile_rows[viewport_y * TILE_HEIGHT + local_y][
+                            viewport_x * TILE_WIDTH + local_x
+                        ] = "%"
         for grenade in grenades or ():
             viewport_x = grenade.tile_x - camera_x + half_size
             viewport_y = grenade.tile_y - camera_y + half_size
             if 0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE:
-                tile_rows[
-                    viewport_y * TILE_HEIGHT + grenade.y
-                ][viewport_x * TILE_WIDTH + grenade.x] = "+" if grenade.flash % 2 == 0 else "O"
+                tile_rows[viewport_y * TILE_HEIGHT + grenade.y][
+                    viewport_x * TILE_WIDTH + grenade.x
+                ] = "+" if grenade.flash % 2 == 0 else "O"
         for obstacle in obstacles or ():
             viewport_x = obstacle.tile_x - camera_x + half_size
             viewport_y = obstacle.tile_y - camera_y + half_size
-            if not (0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE):
+            if not (
+                0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE
+            ):
                 continue
-            tile_rows[
-                viewport_y * TILE_HEIGHT + obstacle.y
-            ][viewport_x * TILE_WIDTH + obstacle.x] = "X"
+            tile_rows[viewport_y * TILE_HEIGHT + obstacle.y][
+                viewport_x * TILE_WIDTH + obstacle.x
+            ] = "X"
         for monster in monsters or ():
             body = monster.tail + [monster.position]
             for tile_x, tile_y, local_x, local_y in body:
                 viewport_x = tile_x - camera_x + half_size
                 viewport_y = tile_y - camera_y + half_size
-                if not (0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE):
+                if not (
+                    0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE
+                ):
                     continue
                 symbol = (
                     monster.head_symbol
@@ -476,9 +513,9 @@ class WorldMap:
                 for block_y in range(local_y, local_y + size):
                     for block_x in range(local_x, local_x + size):
                         if 0 <= block_y < TILE_HEIGHT and 0 <= block_x < TILE_WIDTH:
-                            tile_rows[
-                                viewport_y * TILE_HEIGHT + block_y
-                            ][viewport_x * TILE_WIDTH + block_x] = symbol
+                            tile_rows[viewport_y * TILE_HEIGHT + block_y][
+                                viewport_x * TILE_WIDTH + block_x
+                            ] = symbol
         if altar_tile in self.discovered if altar_tile is not None else False:
             viewport_x = altar_tile[0] - camera_x + half_size
             viewport_y = altar_tile[1] - camera_y + half_size
@@ -495,15 +532,19 @@ class WorldMap:
                 continue
             viewport_x = item.tile_x - camera_x + half_size
             viewport_y = item.tile_y - camera_y + half_size
-            if not (0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE):
+            if not (
+                0 <= viewport_x < VIEWPORT_SIZE and 0 <= viewport_y < VIEWPORT_SIZE
+            ):
                 continue
-            tile_rows[
-                viewport_y * TILE_HEIGHT + item.y
-            ][viewport_x * TILE_WIDTH + item.x] = item.symbol
+            tile_rows[viewport_y * TILE_HEIGHT + item.y][
+                viewport_x * TILE_WIDTH + item.x
+            ] = item.symbol
         local_x, local_y = player_local
         player_view_x = (player_x - camera_x + half_size) * TILE_WIDTH + local_x
         player_view_y = (player_y - camera_y + half_size) * TILE_HEIGHT + local_y
-        if 0 <= player_view_y < len(tile_rows) and 0 <= player_view_x < len(tile_rows[0]):
+        if 0 <= player_view_y < len(tile_rows) and 0 <= player_view_x < len(
+            tile_rows[0]
+        ):
             tile_rows[player_view_y][player_view_x] = "@"
         return "\n".join("".join(row) for row in tile_rows)
 
@@ -514,7 +555,9 @@ class WorldMap:
     ) -> list[list[str]]:
         """Render a tile as part of a seamless multi-tile room."""
         tile = self.ensure_tile(position)
-        region = next((region for region in special_regions if position in region), None)
+        region = next(
+            (region for region in special_regions if position in region), None
+        )
         if region is None:
             return tile.render()
         rows = [[" "] * TILE_WIDTH for _ in range(TILE_HEIGHT)]

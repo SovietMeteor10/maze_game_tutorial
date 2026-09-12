@@ -15,9 +15,7 @@ class MonsterTests(unittest.TestCase):
     def test_snakes_only_spawn_in_key_rooms(self):
         game = self._game_with_key_room()
         key_rooms = {
-            (item.tile_x, item.tile_y)
-            for item in game.items
-            if item.kind == "key"
+            (item.tile_x, item.tile_y) for item in game.items if item.kind == "key"
         }
 
         self.assertTrue(game.monsters)
@@ -67,7 +65,9 @@ class MonsterTests(unittest.TestCase):
         snake = game.monsters[0]
         game.player.tile_x, game.player.tile_y = snake.tile_x, snake.tile_y
         game.player.x, game.player.y = snake.x + 4, snake.y
-        game.state.obstacles.add(Obstacle(snake.tile_x, snake.tile_y, snake.x + 2, snake.y))
+        game.state.obstacles.add(
+            Obstacle(snake.tile_x, snake.tile_y, snake.x + 2, snake.y)
+        )
 
         next_position = game._next_snake_local_position(snake)
 

@@ -56,8 +56,7 @@ def draw_menu(screen: "curses.window", game: "Game", message: str) -> None:
     inventory = game.player.inventory or []
     item_counts = Counter((item.name, item.symbol) for item in inventory)
     inventory_lines = [
-        f"{name} ({symbol}) x {count}"
-        for (name, symbol), count in item_counts.items()
+        f"{name} ({symbol}) x {count}" for (name, symbol), count in item_counts.items()
     ]
     if not inventory_lines:
         inventory_lines = ["(empty)"]

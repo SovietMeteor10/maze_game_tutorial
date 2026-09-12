@@ -29,10 +29,12 @@ class GrenadeTests(unittest.TestCase):
         game = Game(seed=7)
         game.player.grenades = 1
         game.player.hp = 20
-        game.state.items.extend([
-            Item(15, 4, "Health Potion", "potion", 5, 5),
-            Item(15, 4, "Gold Key", "key", 5, 5, key_id="gold"),
-        ])
+        game.state.items.extend(
+            [
+                Item(15, 4, "Health Potion", "potion", 5, 5),
+                Item(15, 4, "Gold Key", "key", 5, 5, key_id="gold"),
+            ]
+        )
         game.state.obstacles.add(Obstacle(5, 5, 14, 4))
         game.handle_command("f")
 

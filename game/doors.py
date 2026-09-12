@@ -44,8 +44,7 @@ class Door:
         if self.key_id is None:
             return False
         return any(
-            item.kind == "key" and item.key_id == self.key_id
-            for item in inventory
+            item.kind == "key" and item.key_id == self.key_id for item in inventory
         )
 
     def unlock(self, inventory) -> bool:

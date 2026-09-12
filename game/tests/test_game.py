@@ -192,7 +192,9 @@ class GameTests(unittest.TestCase):
 
         self.assertEqual((game.player.x, game.player.y), start)
         self.assertIn("Menu open", message)
-        self.assertEqual(game.elapsed_seconds(now=game.menu_started_at + 100), frozen_time)
+        self.assertEqual(
+            game.elapsed_seconds(now=game.menu_started_at + 100), frozen_time
+        )
 
     def test_discovered_landmarks_are_visible_on_the_minimap(self):
         game = Game()

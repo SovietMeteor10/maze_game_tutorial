@@ -18,7 +18,9 @@ class SecretRoomTests(unittest.TestCase):
         game.player.x, game.player.y = OPENING_CELLS[wall.direction][-1]
         game.room = game.world.tiles[(wall.tile_x, wall.tile_y)].render()
 
-        blocked = game.handle_command({"N": "w", "E": "d", "S": "s", "W": "a"}[wall.direction])
+        blocked = game.handle_command(
+            {"N": "w", "E": "d", "S": "s", "W": "a"}[wall.direction]
+        )
 
         self.assertIn("secret wall", blocked.lower())
         self.assertFalse(wall.found)

@@ -13,19 +13,29 @@ def draw_screen(screen: "curses.window", game: Game, message: str) -> None:
         return
 
     screen.erase()
-    screen.addstr(0, 0, "Maze Game | WASD move | H holy grenade | F grenade | R search | K kneel | P altar | C cast | M menu | Q quit")
+    screen.addstr(
+        0,
+        0,
+        "Maze Game | WASD move | H holy grenade | F grenade | R search | K kneel | P altar | C cast | M menu | Q quit",
+    )
 
     viewport_lines = game.render().splitlines()
     height, width = screen.getmaxyx()
     if height < len(viewport_lines) + 4 or width < len(viewport_lines[0]):
         screen.erase()
-        screen.addstr(0, 0, f"Terminal too small. Need at least {len(viewport_lines[0])}x{len(viewport_lines) + 3}.")
+        screen.addstr(
+            0,
+            0,
+            f"Terminal too small. Need at least {len(viewport_lines[0])}x{len(viewport_lines) + 3}.",
+        )
         screen.refresh()
         return
 
     health_text = f"HP {game.health_bar()} {game.player.hp}/{game.player.max_hp}"
     screen.addstr(0, max(0, width - len(health_text) - 1), health_text)
-    grenade_text = f"Grenades: {game.player.grenades} | Holy: {game.player.holy_grenades}"
+    grenade_text = (
+        f"Grenades: {game.player.grenades} | Holy: {game.player.holy_grenades}"
+    )
     screen.addstr(1, max(0, width - len(grenade_text) - 1), grenade_text)
 
     for row_number, line in enumerate(viewport_lines, start=2):
@@ -41,14 +51,22 @@ def draw_screen(screen: "curses.window", game: Game, message: str) -> None:
         _draw_victory_popup(screen, height, width, game)
 
     status_row = len(viewport_lines) + 2
-    screen.addstr(status_row, 0, "Viewport: @ player, K key, ! potion, = pouch, R relic, A altar, B boss | M menu")
+    screen.addstr(
+        status_row,
+        0,
+        "Viewport: @ player, K key, ! potion, = pouch, R relic, A altar, B boss | M menu",
+    )
     if game.boss_active:
-        screen.addstr(status_row, max(0, width - 28), f"BOSS HP: {game.boss_health}/100")
+        screen.addstr(
+            status_row, max(0, width - 28), f"BOSS HP: {game.boss_health}/100"
+        )
     screen.addstr(status_row + 1, 0, message)
     screen.refresh()
 
 
-def _draw_game_over_popup(screen: "curses.window", height: int, width: int, game: "Game") -> None:
+def _draw_game_over_popup(
+    screen: "curses.window", height: int, width: int, game: "Game"
+) -> None:
     """Draw the centered defeat dialog."""
     lines = [
         "GAME OVER",
@@ -72,7 +90,9 @@ def _draw_game_over_popup(screen: "curses.window", height: int, width: int, game
     screen.addstr(top + popup_height - 1, left, border)
 
 
-def _draw_victory_popup(screen: "curses.window", height: int, width: int, game: "Game") -> None:
+def _draw_victory_popup(
+    screen: "curses.window", height: int, width: int, game: "Game"
+) -> None:
     """Draw the completion screen after the boss encounter."""
     message = (
         "The giant snake and its brood are defeated!"
@@ -117,7 +137,9 @@ def _show_victory_screen(screen: "curses.window", game: "Game") -> None:
     screen.getch()
 
 
-def _draw_door_popup(screen: "curses.window", height: int, width: int, mode: str) -> None:
+def _draw_door_popup(
+    screen: "curses.window", height: int, width: int, mode: str
+) -> None:
     """Draw a centered confirmation dialog over the current game view."""
     if mode == "locked":
         lines = [
@@ -181,8 +203,14 @@ def _show_home_screen(screen: "curses.window") -> str:
             screen.addstr(top + offset, max(0, (width - len(line)) // 2), line[:width])
         for index, option in enumerate(options):
             label = f"> {option} <" if index == selected else f"  {option}  "
-            screen.addstr(top + len(title) + index, max(0, (width - len(label)) // 2), label[:width])
-        screen.addstr(height - 2, 2, "Use W/S or arrow keys. Press Enter to select. Q quits.")
+            screen.addstr(
+                top + len(title) + index,
+                max(0, (width - len(label)) // 2),
+                label[:width],
+            )
+        screen.addstr(
+            height - 2, 2, "Use W/S or arrow keys. Press Enter to select. Q quits."
+        )
         screen.refresh()
         key = screen.getch()
         if key in (ord("w"), 259):

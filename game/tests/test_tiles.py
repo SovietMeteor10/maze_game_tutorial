@@ -83,16 +83,24 @@ class TileCatalogueTests(unittest.TestCase):
 
         self.assertEqual(len(reached), len(tiles))
         opening_counts = Counter(len(tile.openings) for tile in tiles.values())
-        self.assertGreater(opening_counts[1] + opening_counts[2], opening_counts[3] + opening_counts[4])
+        self.assertGreater(
+            opening_counts[1] + opening_counts[2], opening_counts[3] + opening_counts[4]
+        )
 
     def test_frontier_crossing_generates_a_reciprocal_tile(self):
         world = WorldMap(seed=7)
         boundary_position, direction = next(
-            ((position, direction)
-             for position, tile in world.tiles.items()
-             for direction in ("N", "E", "S", "W")
-             if tile.is_open(direction)
-             and (position[0] + DELTA[direction][0], position[1] + DELTA[direction][1]) not in world.tiles)
+            (
+                (position, direction)
+                for position, tile in world.tiles.items()
+                for direction in ("N", "E", "S", "W")
+                if tile.is_open(direction)
+                and (
+                    position[0] + DELTA[direction][0],
+                    position[1] + DELTA[direction][1],
+                )
+                not in world.tiles
+            )
         )
         next_position = (
             boundary_position[0] + DELTA[direction][0],
@@ -135,11 +143,13 @@ class TileCatalogueTests(unittest.TestCase):
     def test_frontier_generates_a_reciprocal_entry(self):
         world = WorldMap(seed=7)
         position, direction = next(
-            ((position, direction)
-             for position, tile in world.tiles.items()
-             for direction, (dx, dy) in DELTA.items()
-             if tile.is_open(direction)
-             and (position[0] + dx, position[1] + dy) not in world.tiles)
+            (
+                (position, direction)
+                for position, tile in world.tiles.items()
+                for direction, (dx, dy) in DELTA.items()
+                if tile.is_open(direction)
+                and (position[0] + dx, position[1] + dy) not in world.tiles
+            )
         )
 
         self.assertTrue(world.can_cross(*position, direction))
@@ -159,7 +169,9 @@ class TileCatalogueTests(unittest.TestCase):
         graph = world.connection_graph()
 
         self.assertEqual(set(graph), set(world.tiles))
-        self.assertTrue(all(neighbour in graph for links in graph.values() for neighbour in links))
+        self.assertTrue(
+            all(neighbour in graph for links in graph.values() for neighbour in links)
+        )
 
 
 if __name__ == "__main__":

@@ -3,7 +3,14 @@
 import random
 import time
 
-from .constants import EXIT_SYMBOL, HORIZONTAL_MOVE_STEPS, PLAYER_SYMBOL, TILE_HEIGHT, TILE_WIDTH, WALL_SYMBOL
+from .constants import (
+    EXIT_SYMBOL,
+    HORIZONTAL_MOVE_STEPS,
+    PLAYER_SYMBOL,
+    TILE_HEIGHT,
+    TILE_WIDTH,
+    WALL_SYMBOL,
+)
 from .doors import DELTA as DOOR_DELTA, Door, edge_key
 from .game_state import GameState
 from .grenades import Explosion, Grenade
@@ -87,23 +94,27 @@ class Game:
             for item in self.items
         )
 
-    def _ensure_key_room(self, possible_tiles: list[tuple[int, int]]) -> tuple[int, int]:
+    def _ensure_key_room(
+        self, possible_tiles: list[tuple[int, int]]
+    ) -> tuple[int, int]:
         """Choose or create a room with exactly one graph opening for the key."""
         key_rooms = [
-            position for position in possible_tiles
+            position
+            for position in possible_tiles
             if self.world.tiles[position].kind == "room"
             and len(self.world.tiles[position].openings) == 1
         ]
         if key_rooms:
             return key_rooms[0]
         one_opening = [
-            position for position in possible_tiles
+            position
+            for position in possible_tiles
             if len(self.world.tiles[position].openings) == 1
         ]
         if not one_opening:
-            sources = list(dict.fromkeys(
-                list(possible_tiles) + sorted(self.world.connections)
-            ))
+            sources = list(
+                dict.fromkeys(list(possible_tiles) + sorted(self.world.connections))
+            )
             for source in sources:
                 if source not in self.world.connections:
                     continue
@@ -189,7 +200,9 @@ class Game:
         if not positions:
             return
         self._place_obstacles(self.item_rng)
-        key_exists = any(item.kind == "key" for item in self.items + self.player.inventory)
+        key_exists = any(
+            item.kind == "key" for item in self.items + self.player.inventory
+        )
         if not key_exists:
             key_tile = self._ensure_key_room(sorted(positions))
             if key_tile not in self.world.discovered:
@@ -215,11 +228,20 @@ class Game:
             if position in occupied_tiles or self.item_rng.random() >= 0.50:
                 continue
             kind = self.item_rng.choice(
-                ("potion", "treasure", "grenade_pouch", "grenade_pouch",
-                 "grenade_pouch", "grenade_pouch", "grenade_pouch")
+                (
+                    "potion",
+                    "treasure",
+                    "grenade_pouch",
+                    "grenade_pouch",
+                    "grenade_pouch",
+                    "grenade_pouch",
+                    "grenade_pouch",
+                )
             )
             item_position = self._random_floor_position(position, self.item_rng)
-            if kind == "treasure" and any(item.kind == "treasure" for item in self.items):
+            if kind == "treasure" and any(
+                item.kind == "treasure" for item in self.items
+            ):
                 kind = "potion"
             name = {
                 "potion": "Health Potion",
@@ -256,7 +278,9 @@ class Game:
             if item.kind == "relic"
         } | set(self.altar_slots)
         missing_relics = [name for name in RELIC_NAMES if name not in owned_relics]
-        available = [position for position in sorted(positions) if position not in occupied_tiles]
+        available = [
+            position for position in sorted(positions) if position not in occupied_tiles
+        ]
         if missing_relics and available and self.item_rng.random() < 0.35:
             relic_name = self.item_rng.choice(missing_relics)
             relic_tile = self.item_rng.choice(available)
@@ -266,7 +290,9 @@ class Game:
             )
             occupied_tiles.add(relic_tile)
             owned_relics.add(relic_name)
-        available = [position for position in sorted(positions) if position not in occupied_tiles]
+        available = [
+            position for position in sorted(positions) if position not in occupied_tiles
+        ]
         fallback_tile = sorted(positions)[0] if positions else None
         known_items = self.items + self.player.inventory
         grenade_count = sum(item.kind == "grenade_pouch" for item in known_items)
@@ -274,7 +300,13 @@ class Game:
             grenade_tile = available.pop(0) if available else fallback_tile
             grenade_position = self._random_item_position(grenade_tile, self.item_rng)
             self.state.items.append(
-                Item(*grenade_position, "Grenade Pouch", "grenade_pouch", *grenade_tile, quantity=3)
+                Item(
+                    *grenade_position,
+                    "Grenade Pouch",
+                    "grenade_pouch",
+                    *grenade_tile,
+                    quantity=3,
+                )
             )
             occupied_tiles.add(grenade_tile)
         self.populated_tiles.update(positions)
@@ -329,7 +361,11 @@ class Game:
                 (previous[0], previous[1] + 1),
             ]
             candidate = next(
-                (cell for cell in candidates if cell in floor_cells and cell not in occupied),
+                (
+                    cell
+                    for cell in candidates
+                    if cell in floor_cells and cell not in occupied
+                ),
                 None,
             )
             if candidate is None:
@@ -341,12 +377,9 @@ class Game:
             remaining = [cell for cell in floor_cells if cell not in occupied]
             self.item_rng.shuffle(remaining)
             tail.extend(
-                (*tile_position, *cell)
-                for cell in remaining[: tail_length - len(tail)]
+                (*tile_position, *cell) for cell in remaining[: tail_length - len(tail)]
             )
-        self.monsters.append(
-            Snake(*snake_position, *tile_position, tail, tail_length)
-        )
+        self.monsters.append(Snake(*snake_position, *tile_position, tail, tail_length))
 
     def _spawn_boss(
         self,
@@ -398,7 +431,11 @@ class Game:
             tile_x, tile_y = route[route_index]
             self.monsters.append(
                 Snake(
-                    13, 4, tile_x, tile_y, [],
+                    13,
+                    4,
+                    tile_x,
+                    tile_y,
+                    [],
                     max_tail_length=6,
                     hp=25,
                     symbol="b",
@@ -421,9 +458,17 @@ class Game:
             for x, symbol in enumerate(row)
             if symbol != WALL_SYMBOL
         ]
-        occupied = {(monster.x, monster.y) for monster in self.monsters if (monster.tile_x, monster.tile_y) == tile_position}
+        occupied = {
+            (monster.x, monster.y)
+            for monster in self.monsters
+            if (monster.tile_x, monster.tile_y) == tile_position
+        }
         boss = next(
-            (monster for monster in self.monsters if monster.is_boss and (monster.tile_x, monster.tile_y) == tile_position),
+            (
+                monster
+                for monster in self.monsters
+                if monster.is_boss and (monster.tile_x, monster.tile_y) == tile_position
+            ),
             None,
         )
         spawn_near = []
@@ -434,12 +479,17 @@ class Game:
             ]
             occupied.update(
                 (body_x, body_y)
-                for body_tile_x, body_tile_y, body_x, body_y in boss.tail + [boss.position]
+                for body_tile_x, body_tile_y, body_x, body_y in boss.tail
+                + [boss.position]
                 if body_tile_x == tile_position[0] and body_tile_y == tile_position[1]
                 for body_x in (body_x, body_x + 1)
                 for body_y in (body_y, body_y + 1)
             )
-        choices = [position for position in spawn_near if position in floor and position not in occupied]
+        choices = [
+            position
+            for position in spawn_near
+            if position in floor and position not in occupied
+        ]
         if not choices:
             choices = [position for position in floor if position not in occupied]
         if not choices:
@@ -447,8 +497,14 @@ class Game:
         x, y = self.item_rng.choice(choices)
         self.monsters.append(
             Snake(
-                x, y, *tile_position, [], max_tail_length=2, hp=5,
-                speed=1.5, is_boss_minion=True,
+                x,
+                y,
+                *tile_position,
+                [],
+                max_tail_length=2,
+                hp=5,
+                speed=1.5,
+                is_boss_minion=True,
             )
         )
 
@@ -478,7 +534,8 @@ class Game:
         self.state.boss_room_size = (5, 5)
         self.state.boss_center = centre
         self.state.items = [
-            item for item in self.items
+            item
+            for item in self.items
             if (item.tile_x, item.tile_y) not in self.state.boss_tiles
         ]
         self._spawn_boss_pickups(initial=True)
@@ -505,7 +562,11 @@ class Game:
         """Keep only grenade resources available inside the boss arena."""
         if not self.state.boss_tiles:
             return
-        existing = [item for item in self.items if (item.tile_x, item.tile_y) in self.state.boss_tiles]
+        existing = [
+            item
+            for item in self.items
+            if (item.tile_x, item.tile_y) in self.state.boss_tiles
+        ]
         normal_count = sum(item.kind == "grenade_pouch" for item in existing)
         target_count = 5 if initial else 6
         for _ in range(max(0, target_count - normal_count)):
@@ -515,7 +576,9 @@ class Game:
                 Item(x, y, "Grenade Pouch", "grenade_pouch", *tile, quantity=3)
             )
         if initial or not any(item.kind == "holy_grenade" for item in existing):
-            tile = self.state.boss_center or self.item_rng.choice(sorted(self.state.boss_tiles))
+            tile = self.state.boss_center or self.item_rng.choice(
+                sorted(self.state.boss_tiles)
+            )
             x, y = (19, 5)
             occupied = {
                 (item.x, item.y)
@@ -537,8 +600,11 @@ class Game:
         placed = []
         if not self.state.altar_key_placed:
             key = next(
-                (item for item in self.player.inventory
-                 if item.kind == "key" and item.key_id == "gold"),
+                (
+                    item
+                    for item in self.player.inventory
+                    if item.kind == "key" and item.key_id == "gold"
+                ),
                 None,
             )
             if key is not None:
@@ -548,7 +614,9 @@ class Game:
         for name in RELIC_NAMES:
             if name in self.altar_slots:
                 continue
-            item = next((item for item in self.player.inventory if item.name == name), None)
+            item = next(
+                (item for item in self.player.inventory if item.name == name), None
+            )
             if item is not None:
                 self.player.inventory.remove(item)
                 self.altar_slots[name] = item
@@ -558,7 +626,13 @@ class Game:
             return "The altar still needs: " + ", ".join(remaining) + "."
         if not remaining:
             return "All five relics fill the altar. Press C to cast the spell."
-        return "Placed: " + ", ".join(placed) + ". Remaining: " + ", ".join(remaining) + "."
+        return (
+            "Placed: "
+            + ", ".join(placed)
+            + ". Remaining: "
+            + ", ".join(remaining)
+            + "."
+        )
 
     def _altar_remaining(self) -> list[str]:
         """Return the key and relic offerings still required by the altar."""
@@ -573,15 +647,15 @@ class Game:
         x, y = self.player.x, self.player.y
         altar_x, altar_y = self.state.altar_position
         return (
-            (y in {altar_y - 1, altar_y + 1} and altar_x - 2 <= x <= altar_x + 2)
-            or (x in {altar_x - 4, altar_x + 4} and y == altar_y)
-        )
+            y in {altar_y - 1, altar_y + 1} and altar_x - 2 <= x <= altar_x + 2
+        ) or (x in {altar_x - 4, altar_x + 4} and y == altar_y)
 
     def _place_obstacles(self, rng: random.Random) -> None:
         """Add visible X barriers only to rooms with connected remaining floor."""
         start = (self.player.tile_x, self.player.tile_y)
         eligible = [
-            position for position in sorted(self.world.discovered)
+            position
+            for position in sorted(self.world.discovered)
             if position != start and self.world.tiles[position].kind == "room"
         ]
         for position in eligible:
@@ -597,8 +671,11 @@ class Game:
                 for y, row in enumerate(rendered)
                 for x, symbol in enumerate(row)
                 if symbol != WALL_SYMBOL
-                and (x, y) not in {
-                    cell for direction in tile.openings for cell in OPENING_CELLS[direction]
+                and (x, y)
+                not in {
+                    cell
+                    for direction in tile.openings
+                    for cell in OPENING_CELLS[direction]
                 }
             ]
             rng.shuffle(candidates)
@@ -795,7 +872,9 @@ class Game:
                 self.last_summon_update += steps * 0.25
                 self.state.summon_animation_frames -= steps
                 if self.state.summon_animation_frames:
-                    self.event_message = "The altar flashes " + ("." * (8 - self.state.summon_animation_frames))
+                    self.event_message = "The altar flashes " + (
+                        "." * (8 - self.state.summon_animation_frames)
+                    )
                 else:
                     self.event_message = self._teleport_to_boss_room()
                 changed = True
@@ -849,7 +928,8 @@ class Game:
         )
         if holy_player_hit or (
             not grenade.holy
-            and (self.player.tile_x, self.player.tile_y) == (grenade.tile_x, grenade.tile_y)
+            and (self.player.tile_x, self.player.tile_y)
+            == (grenade.tile_x, grenade.tile_y)
             and (self.player.x, self.player.y) in zone
         ):
             self.player.hp = max(0, self.player.hp - (50 if grenade.holy else 10))
@@ -861,14 +941,18 @@ class Game:
                 or abs(tile_y * TILE_HEIGHT + body_y - grenade_global_y) <= 1
                 for tile_x, tile_y, body_x, body_y in body_cells
             )
-            if holy_hit or (not grenade.holy and (snake.tile_x, snake.tile_y) == (grenade.tile_x, grenade.tile_y) and any(
-                (body_x, body_y) in zone
-                for _, _, body_x, body_y in body_cells
-            )):
+            if holy_hit or (
+                not grenade.holy
+                and (snake.tile_x, snake.tile_y) == (grenade.tile_x, grenade.tile_y)
+                and any((body_x, body_y) in zone for _, _, body_x, body_y in body_cells)
+            ):
                 snake.hp -= 50 if grenade.holy else 10
         wounded_boss = next(
-            (snake for snake in self.monsters
-             if snake.is_boss and not snake.is_subboss and 0 < snake.hp <= 50),
+            (
+                snake
+                for snake in self.monsters
+                if snake.is_boss and not snake.is_subboss and 0 < snake.hp <= 50
+            ),
             None,
         )
         if wounded_boss is not None:
@@ -885,19 +969,23 @@ class Game:
             self.state.boss_defeated = True
             self.won = True
         destroyed_obstacles = {
-            obstacle for obstacle in self.obstacles
+            obstacle
+            for obstacle in self.obstacles
             if (obstacle.tile_x, obstacle.tile_y) == (grenade.tile_x, grenade.tile_y)
             and (obstacle.x, obstacle.y) in zone
         }
         self.state.obstacles.difference_update(destroyed_obstacles)
         self.state.items = [
-            item for item in self.items
+            item
+            for item in self.items
             if item.kind == "key"
             or (item.tile_x, item.tile_y) != (grenade.tile_x, grenade.tile_y)
             or (item.x, item.y) not in zone
         ]
         self.explosions.append(
-            Explosion(grenade.tile_x, grenade.tile_y, grenade.x, grenade.y, holy=grenade.holy)
+            Explosion(
+                grenade.tile_x, grenade.tile_y, grenade.x, grenade.y, holy=grenade.holy
+            )
         )
         if self.player.hp <= 0:
             self.defeated = True
@@ -921,17 +1009,18 @@ class Game:
 
     def _drop_snake_skull(self, snake: Snake) -> None:
         """Drop the unique Snake Skull relic when a regular snake dies."""
-        already_owned = any(
-            item.name == "Snake Skull"
-            for item in self.items + self.player.inventory
-        ) or "Snake Skull" in self.altar_slots
+        already_owned = (
+            any(
+                item.name == "Snake Skull"
+                for item in self.items + self.player.inventory
+            )
+            or "Snake Skull" in self.altar_slots
+        )
         if already_owned:
             return
         tile_position = (snake.tile_x, snake.tile_y)
         x, y = self._random_item_position(tile_position, self.item_rng)
-        self.state.items.append(
-            Item(x, y, "Snake Skull", "relic", *tile_position)
-        )
+        self.state.items.append(Item(x, y, "Snake Skull", "relic", *tile_position))
 
     def _move_snakes_once(self) -> bool:
         """Move all snakes that can currently see the player."""
@@ -951,12 +1040,14 @@ class Game:
                     snake.spawn_timer = 0
                     self._spawn_boss_minion((snake.tile_x, snake.tile_y))
             if (
-                (self.player.tile_x, self.player.tile_y, self.player.x, self.player.y)
-                in {
-                    (tile_x, tile_y, body_x, body_y)
-                    for tile_x, tile_y, body_x, body_y in self._monster_body_cells(snake)
-                }
-            ):
+                self.player.tile_x,
+                self.player.tile_y,
+                self.player.x,
+                self.player.y,
+            ) in {
+                (tile_x, tile_y, body_x, body_y)
+                for tile_x, tile_y, body_x, body_y in self._monster_body_cells(snake)
+            }:
                 self.player.hp = max(0, self.player.hp - (6 if snake.is_boss else 3))
                 if self.player.hp <= 0:
                     self.defeated = True
@@ -964,9 +1055,15 @@ class Game:
                 continue
             tile_distance_x = abs(snake.tile_x - self.player.tile_x)
             tile_distance_y = abs(snake.tile_y - self.player.tile_y)
-            if not snake.is_boss and not snake.is_boss_minion and (tile_distance_x > 2 or tile_distance_y > 2):
+            if (
+                not snake.is_boss
+                and not snake.is_boss_minion
+                and (tile_distance_x > 2 or tile_distance_y > 2)
+            ):
                 continue
-            active = snake.is_boss_minion or (tile_distance_x <= 1 and tile_distance_y <= 1)
+            active = snake.is_boss_minion or (
+                tile_distance_x <= 1 and tile_distance_y <= 1
+            )
             next_position = (
                 self._next_boss_position(snake)
                 if snake.is_boss
@@ -991,23 +1088,30 @@ class Game:
                         snake.tail = snake.tail[: snake.max_tail_length]
                         snake.tile_x, snake.tile_y, snake.x, snake.y = next_step
             if (
-                (self.player.tile_x, self.player.tile_y, self.player.x, self.player.y)
-                in {
-                    (tile_x, tile_y, body_x, body_y)
-                    for tile_x, tile_y, body_x, body_y in self._monster_body_cells(snake)
-                }
-            ):
+                self.player.tile_x,
+                self.player.tile_y,
+                self.player.x,
+                self.player.y,
+            ) in {
+                (tile_x, tile_y, body_x, body_y)
+                for tile_x, tile_y, body_x, body_y in self._monster_body_cells(snake)
+            }:
                 damage = 6 if snake.is_boss else 3
                 self.player.hp = max(0, self.player.hp - damage)
                 if self.player.hp <= 0:
                     self.defeated = True
-                    self.event_message = "The giant snake defeated you." if snake.is_boss else "The snake defeated you."
+                    self.event_message = (
+                        "The giant snake defeated you."
+                        if snake.is_boss
+                        else "The snake defeated you."
+                    )
         return moved
 
     def attack(self) -> str:
         """Strike the nearest snake in the player's local room."""
         targets = [
-            snake for snake in self.monsters
+            snake
+            for snake in self.monsters
             if (snake.tile_x, snake.tile_y) == (self.player.tile_x, self.player.tile_y)
             and abs(snake.x - self.player.x) <= 2
             and abs(snake.y - self.player.y) <= 1
@@ -1016,7 +1120,9 @@ class Game:
             return "There is nothing in reach."
         target = min(
             targets,
-            key=lambda snake: abs(snake.x - self.player.x) + abs(snake.y - self.player.y),
+            key=lambda snake: (
+                abs(snake.x - self.player.x) + abs(snake.y - self.player.y)
+            ),
         )
         target.hp -= 10 if target.is_boss else 5
         if target.hp > 0:
@@ -1099,8 +1205,10 @@ class Game:
             opposite_opening = OPENING_CELLS[OPPOSITE[direction]]
             index = min(
                 range(len(opposite_opening)),
-                key=lambda index: abs(opposite_opening[index][1] - snake.y)
-                + abs(opposite_opening[index][0] - snake.x),
+                key=lambda index: (
+                    abs(opposite_opening[index][1] - snake.y)
+                    + abs(opposite_opening[index][0] - snake.x)
+                ),
             )
             x, y = opposite_opening[index]
             if not self._snake_can_occupy(next_tile, x, y, snake):
@@ -1113,7 +1221,9 @@ class Game:
             else self._next_snake_patrol_position(snake)
         )
 
-    def _next_boss_minion_position(self, snake: Snake) -> tuple[int, int, int, int] | None:
+    def _next_boss_minion_position(
+        self, snake: Snake
+    ) -> tuple[int, int, int, int] | None:
         """Pathfind a boss minion directly toward the player without patrol fallback."""
         target = (self.player.x, self.player.y)
         if (snake.tile_x, snake.tile_y) != (self.player.tile_x, self.player.tile_y):
@@ -1129,7 +1239,9 @@ class Game:
                 if snake_tile in self.state.boss_tiles
                 else self.world.tiles[snake_tile].render()
             )
-            if 0 <= candidate[1] < len(rendered) and 0 <= candidate[0] < len(rendered[0]):
+            if 0 <= candidate[1] < len(rendered) and 0 <= candidate[0] < len(
+                rendered[0]
+            ):
                 if rendered[candidate[1]][candidate[0]] != WALL_SYMBOL:
                     return snake.tile_x, snake.tile_y, *candidate
         return None
@@ -1147,7 +1259,8 @@ class Game:
         if next_tile is None:
             return None
         direction = next(
-            direction for direction, (dx, dy) in DOOR_DELTA.items()
+            direction
+            for direction, (dx, dy) in DOOR_DELTA.items()
             if (snake.tile_x + dx, snake.tile_y + dy) == next_tile
         )
         opening = OPENING_CELLS[direction]
@@ -1157,7 +1270,10 @@ class Game:
             return next_tile[0], next_tile[1], x, y
         step = self._snake_local_path_step(snake, opening[len(opening) // 2])
         return (snake.tile_x, snake.tile_y, *step) if step is not None else None
-    def _next_snake_local_position(self, snake: Snake) -> tuple[int, int, int, int] | None:
+
+    def _next_snake_local_position(
+        self, snake: Snake
+    ) -> tuple[int, int, int, int] | None:
         path_step = self._snake_local_path_step(snake, (self.player.x, self.player.y))
         return (
             (snake.tile_x, snake.tile_y, *path_step)
@@ -1205,17 +1321,24 @@ class Game:
         target = boss.boss_route[
             (boss.boss_route_index + boss.boss_route_direction) % len(boss.boss_route)
         ]
-        direction = next(
-            direction for direction, delta in DELTA.items()
-            if (current[0] + delta[0], current[1] + delta[1]) == target
-        ) if target != current else None
+        direction = (
+            next(
+                direction
+                for direction, delta in DELTA.items()
+                if (current[0] + delta[0], current[1] + delta[1]) == target
+            )
+            if target != current
+            else None
+        )
         if direction is None:
             boss.boss_route_index = (boss.boss_route_index + 1) % len(boss.boss_route)
             target = boss.boss_route[
-                (boss.boss_route_index + boss.boss_route_direction) % len(boss.boss_route)
+                (boss.boss_route_index + boss.boss_route_direction)
+                % len(boss.boss_route)
             ]
             direction = next(
-                direction for direction, delta in DELTA.items()
+                direction
+                for direction, delta in DELTA.items()
                 if (current[0] + delta[0], current[1] + delta[1]) == target
             )
         opening = OPENING_CELLS[direction]
@@ -1243,7 +1366,9 @@ class Game:
             rendered = self.world.render_region_tile(
                 (boss.tile_x, boss.tile_y), (self.state.boss_tiles,)
             )
-            if not (0 <= next_y < len(rendered) and 0 <= next_x < len(rendered[next_y])):
+            if not (
+                0 <= next_y < len(rendered) and 0 <= next_x < len(rendered[next_y])
+            ):
                 return None
             if rendered[next_y][next_x] == WALL_SYMBOL:
                 return None
@@ -1445,7 +1570,9 @@ class Game:
     def _door_for(self, tile_x: int, tile_y: int, direction: str) -> Door | None:
         return self.state.doors.get(edge_key(tile_x, tile_y, direction))
 
-    def _secret_wall_for(self, tile_x: int, tile_y: int, direction: str) -> SecretWall | None:
+    def _secret_wall_for(
+        self, tile_x: int, tile_y: int, direction: str
+    ) -> SecretWall | None:
         return self.state.secret_walls.get(edge_key(tile_x, tile_y, direction))
 
     def _place_default_secret_wall(self) -> None:
@@ -1491,8 +1618,7 @@ class Game:
         current_tile = (self.player.tile_x, self.player.tile_y)
         next_tile = (self.player.tile_x + dx, self.player.tile_y + dy)
         internal_boss_edge = (
-            current_tile in self.state.boss_tiles
-            and next_tile in self.state.boss_tiles
+            current_tile in self.state.boss_tiles and next_tile in self.state.boss_tiles
         )
         internal_shrine_edge = (
             current_tile in self.state.shrine_tiles
@@ -1508,14 +1634,23 @@ class Game:
             )
         )
         internal_special_edge = internal_boss_edge or internal_shrine_edge
-        if not internal_special_edge and (self.player.x, self.player.y) not in OPENING_CELLS[direction]:
+        if (
+            not internal_special_edge
+            and (self.player.x, self.player.y) not in OPENING_CELLS[direction]
+        ):
             return False
-        secret_wall = None if internal_special_edge else self._secret_wall_for(
-            self.player.tile_x, self.player.tile_y, direction
+        secret_wall = (
+            None
+            if internal_special_edge
+            else self._secret_wall_for(
+                self.player.tile_x, self.player.tile_y, direction
+            )
         )
         if secret_wall is not None and not secret_wall.found:
             return False
-        can_cross_door, _ = (True, None) if internal_special_edge else self._can_cross_door(direction)
+        can_cross_door, _ = (
+            (True, None) if internal_special_edge else self._can_cross_door(direction)
+        )
         if not can_cross_door:
             return False
         if not internal_special_edge and not self.world.can_cross(
@@ -1595,7 +1730,8 @@ class Game:
                 (item.tile_x, item.tile_y) != player_position[:2]
                 or item.y != player_position[3]
                 or abs(item.x - player_position[2]) >= HORIZONTAL_MOVE_STEPS
-                or item.kind == "relic" and item.name in owned_relics
+                or item.kind == "relic"
+                and item.name in owned_relics
             ):
                 continue
             collected.append(item)
@@ -1606,9 +1742,7 @@ class Game:
         self.state.items = [item for item in self.items if item not in collected]
         self.player.inventory.extend(collected)
         self.player.grenades += sum(
-            item.quantity
-            for item in collected
-            if item.kind == "grenade_pouch"
+            item.quantity for item in collected if item.kind == "grenade_pouch"
         )
         self.player.holy_grenades += sum(
             item.quantity for item in collected if item.kind == "holy_grenade"
@@ -1732,7 +1866,9 @@ class Game:
                     return "The door is locked and you lack a key."
                 return "Open the door? Press Y to open it or N to cancel."
             direction = {"w": "N", "d": "E", "s": "S", "a": "W"}[command]
-            secret_wall = self._secret_wall_for(self.player.tile_x, self.player.tile_y, direction)
+            secret_wall = self._secret_wall_for(
+                self.player.tile_x, self.player.tile_y, direction
+            )
             if secret_wall is not None and not secret_wall.found:
                 return "A secret wall blocks your path. Press F to search."
             if command in {"w", "a", "s", "d"}:
@@ -1812,10 +1948,16 @@ class Game:
                 for local_x, local_y in OPENING_CELLS[wall.direction]:
                     rows[local_y][local_x] = WALL_SYMBOL
         for obstacle in self.obstacles:
-            if (obstacle.tile_x, obstacle.tile_y) == (self.player.tile_x, self.player.tile_y):
+            if (obstacle.tile_x, obstacle.tile_y) == (
+                self.player.tile_x,
+                self.player.tile_y,
+            ):
                 rows[obstacle.y][obstacle.x] = "X"
         for explosion in self.explosions:
-            if (explosion.tile_x, explosion.tile_y) == (self.player.tile_x, self.player.tile_y):
+            if (explosion.tile_x, explosion.tile_y) == (
+                self.player.tile_x,
+                self.player.tile_y,
+            ):
                 if explosion.holy:
                     for row in rows:
                         for x in range(explosion.x - 2, explosion.x + 3):
@@ -1828,10 +1970,17 @@ class Game:
                     continue
                 for x in range(explosion.x - 2, explosion.x + 3):
                     for y in range(explosion.y - 1, explosion.y + 2):
-                        if 0 <= y < len(rows) and 0 <= x < len(rows[y]) and rows[y][x] != WALL_SYMBOL:
+                        if (
+                            0 <= y < len(rows)
+                            and 0 <= x < len(rows[y])
+                            and rows[y][x] != WALL_SYMBOL
+                        ):
                             rows[y][x] = "%"
         for grenade in self.grenades:
-            if (grenade.tile_x, grenade.tile_y) == (self.player.tile_x, self.player.tile_y):
+            if (grenade.tile_x, grenade.tile_y) == (
+                self.player.tile_x,
+                self.player.tile_y,
+            ):
                 rows[grenade.y][grenade.x] = "+" if grenade.flash % 2 == 0 else "O"
         for monster in self.monsters:
             for tile_x, tile_y, local_x, local_y in monster.tail + [monster.position]:
@@ -1844,7 +1993,9 @@ class Game:
                     size = 2 if monster.is_boss else 1
                     for body_y in range(local_y, local_y + size):
                         for body_x in range(local_x, local_x + size):
-                            if 0 <= body_y < len(rows) and 0 <= body_x < len(rows[body_y]):
+                            if 0 <= body_y < len(rows) and 0 <= body_x < len(
+                                rows[body_y]
+                            ):
                                 rows[body_y][body_x] = symbol
         if (self.player.tile_x, self.player.tile_y) == self.state.altar_tile:
             altar_x, altar_y = self.state.altar_position
