@@ -1,5 +1,8 @@
 # Reference Game
 
+For complete installation, virtual-environment, Windows, testing, and
+troubleshooting instructions, see [`../SETUP.md`](../SETUP.md).
+
 This is the first playable slice of the reference implementation. It uses the terminal's non-blocking input mode, so the screen stays in place and movement responds to individual key events and terminal key repeat. Run it from the project root with:
 
 ```text

@@ -6,6 +6,8 @@ each milestone readable.
 
 ## Start here
 
+If this is a fresh computer, read [`../SETUP.md`](../SETUP.md) first.
+
 1. Read `lessons/README.md`.
 2. Read lessons in numerical order.
 3. Run the matching learner exercise in `lessons/`, for example:
